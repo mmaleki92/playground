@@ -239,3 +239,63 @@ function dist(a: Point, b: Point): number {
   let dy = a.y - b.y;
   return Math.sqrt(dx * dx + dy * dy);
 }
+
+export function classifyDoubleMoonData(numSamples: number, noise: number): Example2D[] {
+  let points: Example2D[] = [];
+  let n = numSamples / 2;
+
+  function genMoon(centerX: number, centerY: number, label: number, flip: boolean = false) {
+    for (let i = 0; i < n; i++) {
+      let angle = randUniform(0, Math.PI); // Half circle
+      let x = Math.cos(angle) + randUniform(-1, 1) * noise;
+      let y = Math.sin(angle) + randUniform(-1, 1) * noise;
+
+      // Flip the moon to make a double moon shape
+      if (flip) {
+        y = -y - 0.5; // Offset the y to separate the moons slightly
+      }
+
+      points.push({
+        x: x + centerX,
+        y: y + centerY,
+        label: label
+      });
+    }
+  }
+
+  // Generate the top moon
+  genMoon(-1.5, 0, 1);
+  // Generate the bottom inverted moon
+  genMoon(1.5, 0, -1, true);
+  return points;
+}
+
+
+/**
+ * Generates data with two classes separated by a diamond-shaped boundary.
+ * @param numSamples The total number of samples to generate.
+ * @param noise The noise level affecting the boundary clarity.
+ * @returns An array of Example2D objects representing the dataset.
+ */
+export function classifyDiamondData(numSamples: number, noise: number): Example2D[] {
+  let points: Example2D[] = [];
+  let radius = 2.5; // This controls the size of the diamond.
+
+  function getDiamondLabel(p: Point): number {
+    // Diamond condition: |x| + |y| <= radius
+    return Math.abs(p.x) + Math.abs(p.y) <= radius ? 1 : -1;
+  }
+
+  for (let i = 0; i < numSamples; i++) {
+    let angle = Math.random() * 2 * Math.PI;
+    let r = radius * Math.sqrt(Math.random()); // To ensure uniform distribution
+    let x = r * Math.cos(angle);
+    let y = r * Math.sin(angle);
+    let noiseX = randUniform(-radius, radius) * noise;
+    let noiseY = randUniform(-radius, radius) * noise;
+    let label = getDiamondLabel({x: x + noiseX, y: y + noiseY});
+    points.push({x, y, label});
+  }
+
+  return points;
+}
